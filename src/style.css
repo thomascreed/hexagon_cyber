@@ -1,0 +1,98 @@
+
+:root {
+  --bg: #f5f7fb;
+  --card: #ffffff;
+  --text: #172033;
+  --muted: #6b7280;
+  --primary: #0f3b5f;
+  --primary2: #135c84;
+  --line: #d9e2ec;
+  --pass: #166534;
+  --fail: #991b1b;
+  --exception: #92400e;
+  --pending: #475569;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, Arial, sans-serif; }
+button, input, textarea, select { font: inherit; }
+.app { display: flex; min-height: 100vh; }
+.sidebar { width: 330px; background: #0a2238; color: white; padding: 24px; position: fixed; inset: 0 auto 0 0; overflow-y: auto; }
+.brand { display: flex; gap: 14px; align-items: center; margin-bottom: 28px; }
+.brandIcon { background: #123a5c; border: 1px solid #315b7b; padding: 12px; border-radius: 16px; }
+.brand h1 { font-size: 20px; margin: 0; }
+.brand p { margin: 4px 0 0; color: #b8c7d6; font-size: 13px; }
+.progressCard { display: flex; gap: 16px; align-items: center; padding: 18px; border-radius: 18px; background: linear-gradient(135deg, #123a5c, #0f5e7a); margin-bottom: 16px; }
+.score { font-size: 38px; font-weight: 800; }
+.progressCard p { margin: 4px 0 0; color: #d8e6ef; font-size: 13px; }
+.miniStats { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 20px; font-size: 13px; }
+.miniStats span { background: rgba(255,255,255,.08); padding: 10px 12px; border-radius: 12px; }
+nav { display: grid; gap: 8px; }
+nav button { width: 100%; border: 0; border-radius: 12px; padding: 12px; background: transparent; color: #dbeafe; display: flex; justify-content: space-between; cursor: pointer; text-align: left; }
+nav button:hover, nav button.active { background: rgba(255,255,255,.12); }
+nav small { color: #a5bed4; }
+.main { margin-left: 330px; width: calc(100% - 330px); padding: 32px; }
+.hero { display: flex; justify-content: space-between; gap: 24px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 24px; padding: 28px; margin-bottom: 20px; }
+.hero h2 { margin: 0; font-size: 32px; }
+.hero p { color: var(--muted); margin: 8px 0 0; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.actions button, .stepNav button { border: 0; background: var(--primary); color: white; padding: 12px 16px; border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.actions button:hover, .stepNav button:hover { background: var(--primary2); }
+.stepNav button:disabled { opacity: .45; cursor: not-allowed; }
+.employeeCard { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 18px; margin-bottom: 20px; }
+input, textarea, select { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: white; color: var(--text); }
+textarea { min-height: 76px; resize: vertical; }
+.controlsPanel { background: var(--card); border: 1px solid var(--line); border-radius: 24px; overflow: hidden; }
+.panelHeader { padding: 24px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.panelHeader p { margin: 0; color: var(--muted); font-size: 13px; }
+.panelHeader h3 { margin: 4px 0 0; font-size: 24px; }
+.searchBox { display: flex; align-items: center; gap: 8px; min-width: 320px; border: 1px solid var(--line); border-radius: 14px; padding: 0 12px; background: white; }
+.searchBox input { border: 0; width: 100%; outline: none; }
+.controlList { display: grid; gap: 16px; padding: 20px; }
+.controlCard { border: 1px solid var(--line); border-radius: 18px; padding: 18px; background: #fbfdff; }
+.controlCard.status-pass { border-left: 6px solid var(--pass); }
+.controlCard.status-fail { border-left: 6px solid var(--fail); }
+.controlCard.status-exception { border-left: 6px solid var(--exception); }
+.controlTop { display: flex; justify-content: space-between; gap: 16px; align-items: start; margin-bottom: 14px; }
+.controlId { display: inline-block; font-size: 12px; font-weight: 700; color: var(--primary); background: #e6f1f8; padding: 5px 8px; border-radius: 999px; margin-bottom: 8px; }
+.controlTop h4 { margin: 0; font-size: 19px; }
+.infoGrid { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 14px; }
+.infoGrid div { background: white; border: 1px solid #e8eef5; padding: 14px; border-radius: 14px; }
+.infoGrid strong { font-size: 13px; color: var(--primary); }
+.infoGrid p { margin: 8px 0 0; color: #334155; line-height: 1.5; }
+.howToCheckBlock { min-height: 100%; }
+.howToCheckText {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.7;
+  min-height: 300px;
+  max-height: none;
+}
+.answerGrid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px; margin-top: 14px; }
+.stepNav { display: flex; justify-content: space-between; padding: 20px; border-top: 1px solid var(--line); }
+.printReport { display: none; }
+.reportDoc { background: white; color: black; padding: 30px; }
+.reportHeader { display: flex; justify-content: space-between; border-bottom: 2px solid #111; padding-bottom: 16px; margin-bottom: 16px; }
+.reportHeader h1 { margin: 0; font-size: 24px; }
+.reportMeta { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 30px; margin-bottom: 16px; }
+.reportScore { border: 1px solid #222; padding: 16px; margin-bottom: 20px; }
+.reportScore h2 { margin: 0; font-size: 42px; }
+.reportScore span { margin-right: 20px; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th, td { border: 1px solid #555; padding: 8px; vertical-align: top; }
+th { background: #efefef; }
+
+@media (max-width: 1000px) {
+  .sidebar { position: static; width: 100%; }
+  .app { display: block; }
+  .main { margin-left: 0; width: 100%; padding: 18px; }
+  .employeeCard, .infoGrid, .answerGrid { grid-template-columns: 1fr; }
+  .hero, .panelHeader { flex-direction: column; align-items: stretch; }
+  .searchBox { min-width: 0; }
+}
+@media print {
+  body { background: white; }
+  .no-print, .sidebar, .controlsPanel, .hero, .employeeCard { display: none !important; }
+  .main { margin: 0; width: 100%; padding: 0; }
+  .printReport { display: block; }
+  .reportDoc { padding: 0; }
+}
