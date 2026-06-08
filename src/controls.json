@@ -5,7 +5,7 @@
     "control": "BIOS Password",
     "requirement": "Configured. Do not configure startup password unless specifically approved by OEM or operational requirement.",
     "howToCheck": "Purpose: This check confirms the BIOS Password setting in BIOS/UEFI matches the approved hardening baseline.\n\nGUI Method:\n- Save your work and restart the computer.\n- During startup, press the BIOS/UEFI entry key shown by the manufacturer, such as F2, Delete, Esc, or F10.\n- If prompted, enter the approved BIOS/UEFI password using the authorized process.\n- Navigate to Security or Passwords.\n- Open or view Administrator Password, Setup Password, or Supervisor Password.\n- Read the current setting only. Do not change anything in BIOS/UEFI.\n- If needed, capture approved evidence and then exit BIOS/UEFI without saving changes.\n\nCommand Method:\n- powershell -Command \"Confirm-SecureBootUEFI\"\n- This read-only command only helps confirm the device is using UEFI. It does not show the BIOS password, so the main verification must still be done in BIOS/UEFI.\n\nExpected Compliant Result: Configured.\n\nIf It Does Not Match: Do not change the setting yourself. Mark Fail or Exception, add a short note describing what you observed, and report it to IT/Cybersecurity.",
-    "evidence": "Screenshot, configuration export, or approved exception record.",
+    "evidence": "\nScreenshot, configuration export, or approved exception record.",
     "severity": "High"
   },
   {
