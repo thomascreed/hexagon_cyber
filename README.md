@@ -2,6 +2,11 @@
 
 This is a free, Vercel-ready React/Vite web app for employee cybersecurity verification.
 
+## Documentation
+
+- Full project guide: [`docs/Home.md`](docs/Home.md)
+- Scanner workflow, portal usage, reporting, maintenance, and deployment details are documented there.
+
 ## Run locally
 
 ```bash
