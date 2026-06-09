@@ -147,6 +147,7 @@ nav small {
 }
 
 .hero,
+.offlinePanel,
 .employeeCard,
 .scanPanel,
 .summaryCard,
@@ -163,6 +164,52 @@ nav small {
   align-items: center;
   padding: 28px;
   margin-bottom: 20px;
+}
+
+.offlinePanel {
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.offlinePanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.offlinePanelHeader h3 {
+  margin: 0;
+}
+
+.offlineStatusGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.offlineStatusCard {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
+  background: #fbfdff;
+}
+
+.offlineStatusCard p {
+  margin: 12px 0 0;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.secondaryAction {
+  background: white !important;
+  color: var(--primary) !important;
+  border: 1px solid var(--line) !important;
+}
+
+.secondaryAction:hover {
+  background: var(--soft-blue) !important;
 }
 
 .hero h2 {
@@ -636,6 +683,7 @@ th {
 }
 
 @media (max-width: 1200px) {
+  .offlineStatusGrid,
   .summaryGrid,
   .scanContent,
   .reportMetaWide,
@@ -668,6 +716,7 @@ th {
   }
 
   .hero,
+  .offlinePanelHeader,
   .panelHeader,
   .scanHeader {
     flex-direction: column;

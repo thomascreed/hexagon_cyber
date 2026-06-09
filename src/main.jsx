@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   ShieldCheck,
@@ -32,6 +32,14 @@ const EMPTY_ANSWER = {
   evidence: "",
   scanner: null,
 };
+const EMPTY_EMPLOYEE = {
+  name: "",
+  employeeId: "",
+  department: "",
+  deviceName: "",
+  assetTag: "",
+};
+const DRAFT_STORAGE_KEY = "ot-cyber-portal-draft-v1";
 
 function groupByCategory(items) {
   return items.reduce((acc, item) => {
@@ -94,6 +102,32 @@ function formatDate(value) {
   return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString();
 }
 
+function loadSavedDraft() {
+  if (typeof window === "undefined") {
+    return { hasDraft: false, restoreError: false };
+  }
+
+  try {
+    const raw = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) {
+      return { hasDraft: false, restoreError: false };
+    }
+
+    const parsed = JSON.parse(raw);
+    return {
+      hasDraft: true,
+      restoreError: false,
+      step: Number.isInteger(parsed?.step) ? parsed.step : 0,
+      employee: { ...EMPTY_EMPLOYEE, ...(parsed?.employee || {}) },
+      answers: parsed?.answers && typeof parsed.answers === "object" ? parsed.answers : {},
+      scanInfo: parsed?.scanInfo || null,
+      savedAt: parsed?.savedAt || "",
+    };
+  } catch (error) {
+    return { hasDraft: false, restoreError: true };
+  }
+}
+
 function StatusBadge({ status, label, subtle = false }) {
   const Icon = getStatusIcon(status);
   return (
@@ -107,19 +141,42 @@ function StatusBadge({ status, label, subtle = false }) {
 function App() {
   const grouped = useMemo(() => groupByCategory(controls), []);
   const categories = Object.keys(grouped);
+  const [draftBootstrap] = useState(() => loadSavedDraft());
+  const hasInitializedAutosave = useRef(false);
 
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState({});
+  const [step, setStep] = useState(() => draftBootstrap.step || 0);
+  const [answers, setAnswers] = useState(() => draftBootstrap.answers || {});
   const [search, setSearch] = useState("");
-  const [employee, setEmployee] = useState({
-    name: "",
-    employeeId: "",
-    department: "",
-    deviceName: "",
-    assetTag: "",
-  });
-  const [scanInfo, setScanInfo] = useState(null);
+  const [employee, setEmployee] = useState(() => draftBootstrap.employee || EMPTY_EMPLOYEE);
+  const [scanInfo, setScanInfo] = useState(() => draftBootstrap.scanInfo || null);
   const [uploadFeedback, setUploadFeedback] = useState(null);
+  const [isOffline, setIsOffline] = useState(() => (typeof navigator !== "undefined" ? !navigator.onLine : false));
+  const [draftStatus, setDraftStatus] = useState(() => {
+    if (draftBootstrap.restoreError) {
+      return {
+        tone: "error",
+        message: "A previous local draft could not be restored. New changes will still autosave on this device.",
+      };
+    }
+
+    if (draftBootstrap.hasDraft) {
+      return {
+        tone: "pass",
+        message: draftBootstrap.savedAt
+          ? `Restored a local draft from ${formatDate(draftBootstrap.savedAt)}.`
+          : "Restored a previously saved local draft.",
+      };
+    }
+
+    return {
+      tone: "not_checked",
+      message: "Autosave is available on this device for offline manual review.",
+    };
+  });
+  const [swStatus, setSwStatus] = useState({
+    tone: "not_checked",
+    message: "Preparing offline support for this browser.",
+  });
 
   const currentCategory = categories[step] || "";
   const currentControls = grouped[currentCategory] || [];
@@ -151,6 +208,105 @@ function App() {
   const total = controls.length;
   const completed = total - portalCounts.not_checked;
   const score = total ? Math.round((portalCounts.pass / total) * 100) : 0;
+
+  useEffect(() => {
+    if (step > categories.length - 1) {
+      setStep(Math.max(categories.length - 1, 0));
+    }
+  }, [categories.length, step]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const handleNetworkChange = () => setIsOffline(!window.navigator.onLine);
+
+    handleNetworkChange();
+    window.addEventListener("online", handleNetworkChange);
+    window.addEventListener("offline", handleNetworkChange);
+
+    return () => {
+      window.removeEventListener("online", handleNetworkChange);
+      window.removeEventListener("offline", handleNetworkChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (!("serviceWorker" in navigator)) {
+      setSwStatus({
+        tone: "manual_review",
+        message: "This browser does not support service workers, so offline access may be limited.",
+      });
+      return;
+    }
+
+    const alreadyControlled = Boolean(navigator.serviceWorker.controller);
+
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then(() => {
+        setSwStatus(
+          alreadyControlled
+            ? {
+                tone: "pass",
+                message: "Offline support is active on this device.",
+              }
+            : {
+                tone: "manual_review",
+                message: "Offline support has been registered. Reload once while online to guarantee offline access on this device.",
+              }
+        );
+      })
+      .catch(() => {
+        setSwStatus({
+          tone: "error",
+          message: "Offline support could not be enabled on this device.",
+        });
+      });
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const savedAt = new Date().toISOString();
+    const payload = {
+      version: 1,
+      savedAt,
+      step,
+      employee,
+      answers,
+      scanInfo,
+    };
+
+    try {
+      window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(payload));
+
+      if (!hasInitializedAutosave.current) {
+        hasInitializedAutosave.current = true;
+
+        if (draftBootstrap.hasDraft && !draftBootstrap.restoreError) {
+          setDraftStatus({
+            tone: "pass",
+            message: draftBootstrap.savedAt
+              ? `Restored local draft from ${formatDate(draftBootstrap.savedAt)}. Future changes will keep saving automatically on this device.`
+              : "Restored local draft. Future changes will keep saving automatically on this device.",
+          });
+          return;
+        }
+      }
+
+      setDraftStatus({
+        tone: "pass",
+        message: `Saved locally on this device at ${formatDate(savedAt)}.`,
+      });
+    } catch (error) {
+      setDraftStatus({
+        tone: "error",
+        message: "Unable to save progress locally on this device.",
+      });
+    }
+  }, [step, employee, answers, scanInfo, draftBootstrap.hasDraft, draftBootstrap.restoreError, draftBootstrap.savedAt]);
 
   function updateAnswer(id, update) {
     setAnswers((prev) => ({
@@ -252,6 +408,28 @@ function App() {
     window.print();
   }
 
+  function clearLocalDraft() {
+    if (typeof window === "undefined") return;
+
+    const confirmed = window.confirm("Clear the saved local review draft from this browser and reset the current form?");
+    if (!confirmed) return;
+
+    window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+    setStep(0);
+    setAnswers({});
+    setSearch("");
+    setEmployee(EMPTY_EMPLOYEE);
+    setScanInfo(null);
+    setUploadFeedback({
+      tone: "not_checked",
+      message: "Local draft cleared from this browser. New entries will autosave again automatically.",
+    });
+    setDraftStatus({
+      tone: "not_checked",
+      message: "Local draft cleared. New progress will autosave on this device.",
+    });
+  }
+
   return (
     <div className="app">
       <aside className="sidebar no-print">
@@ -315,6 +493,46 @@ function App() {
             <button onClick={printReport}>
               <Printer size={16} /> Print Report
             </button>
+          </div>
+        </section>
+
+        <section className="offlinePanel no-print">
+          <div className="offlinePanelHeader">
+            <div>
+              <p className="eyebrow">Offline Manual Review Mode</p>
+              <h3>Keep reviewing controls even when the employee is disconnected</h3>
+              <p className="mutedText">
+                After this browser loads the portal successfully, reviewers can continue reading the how-to-check instructions, enter manual statuses,
+                and save evidence notes while offline. Progress is autosaved locally on this device.
+              </p>
+            </div>
+
+            <div className="actions">
+              <button className="secondaryAction" onClick={clearLocalDraft}>
+                Clear Local Draft
+              </button>
+            </div>
+          </div>
+
+          <div className="offlineStatusGrid">
+            <article className="offlineStatusCard">
+              <StatusBadge status={isOffline ? "manual_review" : "pass"} label={isOffline ? "Connection Status: Offline" : "Connection Status: Online"} />
+              <p>
+                {isOffline
+                  ? "The portal is running without network access. Manual review, evidence notes, and previously loaded control content remain available on this device."
+                  : "You are connected. The portal can keep caching content and saving draft progress locally for later offline review."}
+              </p>
+            </article>
+
+            <article className="offlineStatusCard">
+              <StatusBadge status={draftStatus.tone} label="Local Draft Autosave" />
+              <p>{draftStatus.message}</p>
+            </article>
+
+            <article className="offlineStatusCard">
+              <StatusBadge status={swStatus.tone} label="Offline App Readiness" />
+              <p>{swStatus.message}</p>
+            </article>
           </div>
         </section>
 
