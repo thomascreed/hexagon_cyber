@@ -47,6 +47,8 @@ Controls are loaded from `src/controls.json`.
 - Manual override support
 - Evidence reference field
 - Reviewer comments / exception notes
+- Offline-capable manual review mode after the portal is loaded once online
+- Local draft autosave and restore on the same browser/device
 
 ### Automated Scanner Workflow
 
@@ -116,6 +118,21 @@ npm run dev
 The development server starts on:
 
 - `http://localhost:5173/`
+
+### Offline / PWA Support
+
+The portal now supports an offline-capable manual review workflow.
+
+Key behaviors:
+
+- the browser can cache the portal shell for later offline use
+- reviewers can keep reading control instructions while disconnected
+- manual statuses, evidence references, comments, employee details, and scan metadata are autosaved locally
+- saved drafts are restored automatically on the same browser/device
+
+Operational note:
+
+- the reviewer should open the portal successfully at least once while online so the app shell is cached before going offline
 
 ### Build for Production
 
@@ -206,6 +223,19 @@ The reviewer can:
 
 - print the report
 - download a text report
+
+### 7. Continue Manual Review Offline When Needed
+
+If an employee or reviewer is temporarily disconnected:
+
+1. open the portal once while online on the intended browser/device
+2. allow the browser to cache the app shell
+3. continue using the portal offline for manual control review
+4. read the existing **How to Check** instructions per control
+5. enter manual status, evidence reference, and notes
+6. rely on local browser autosave until connectivity returns
+
+The offline workflow is primarily intended for manual review scenarios where the user still needs access to the checklist and instructions even without network access.
 
 ---
 
@@ -326,6 +356,46 @@ If scanner IDs change in the PowerShell script, update the mapping table so impo
 
 ---
 
+## Offline Manual Review Support
+
+The portal now includes a lightweight PWA/offline workflow for manual compliance checks.
+
+### What was added
+
+- web app manifest support
+- service worker caching for the application shell and scanner download assets
+- local draft autosave using browser storage
+- automatic draft restoration on the same browser/device
+- in-app status messaging for:
+  - connection status
+  - autosave status
+  - offline readiness
+
+### What works offline
+
+After the portal has been opened successfully while online:
+
+- the cached portal can reopen later without internet on that device/browser
+- previously loaded control content remains available
+- reviewers can manually inspect controls and enter:
+  - final status
+  - evidence reference
+  - comments
+  - employee/device metadata
+- progress is stored locally in the browser
+
+### What to tell users
+
+- open the portal once while connected before going offline
+- use the same browser/device to continue the saved review later
+- do not clear browser storage if the local draft must be preserved
+
+### Important scope note
+
+This offline mode is designed primarily for **manual review continuity**. It helps reviewers keep using the portal while disconnected, but it does not replace broader enterprise sync or multi-device draft-sharing workflows.
+
+---
+
 ## Reporting Behavior
 
 ### Downloaded Text Report
@@ -399,12 +469,22 @@ Areas commonly updated there:
 - report generation
 - category navigation
 - employee metadata capture
+- offline draft persistence
+- service worker registration and offline readiness messaging
 
 ### Styling
 
 Portal styling is defined in:
 
 - `src/style.css`
+
+### Offline Assets
+
+The offline-capable app shell also depends on:
+
+- `public/manifest.webmanifest`
+- `public/sw.js`
+- `public/icon.svg`
 
 ---
 
@@ -413,16 +493,18 @@ Portal styling is defined in:
 - The browser itself cannot inspect local Windows security state
 - Some controls remain inherently manual or environment-specific
 - The scanner is Windows-oriented and not intended for non-Windows endpoints
-- GitHub Wiki publishing is not currently enabled for this repository, so this page is stored in-repo under `docs/Home.md`
+- Offline access depends on the portal being loaded successfully at least once while online on that browser/device
+- Local drafts are stored only in that browser on that device unless a future export/sync feature is added
 
 ---
 
 ## Recommended Next Improvements
 
-- Enable the GitHub Wiki feature and mirror this page into the repo wiki
+- Add an explicit in-app install prompt for easier PWA installation
+- Add offline draft export/import for transferring reviews between devices
 - Split the documentation into multiple pages (Architecture, Scanner, Operations, Deployment)
 - Add sample `compliance-results.json` documentation or fixture data
-- Add test coverage for import parsing and report generation logic
+- Add test coverage for import parsing, autosave recovery, and report generation logic
 - Add versioning for control baselines and scanner schema
 
 ---
@@ -453,3 +535,9 @@ npm run build
 - `src/scannerConfig.js`
 - `src/controls.json`
 - `src/style.css`
+
+### Offline support files
+
+- `public/manifest.webmanifest`
+- `public/sw.js`
+- `public/icon.svg`
